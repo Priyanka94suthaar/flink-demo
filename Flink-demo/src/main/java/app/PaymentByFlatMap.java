@@ -5,6 +5,7 @@ import model.PaymentData;
 import model.Status;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.FlatMapFunction;
+import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -25,13 +26,25 @@ public class PaymentByFlatMap {
                 return value.getStatus().equals(Status.STARTED.name());
             }
         }).keyBy(PaymentData::getComponentId);
-        //paymentFiltered.print();
-        DataStream<Tuple2<PaymentData, Integer>> counts = paymentFiltered
-                .flatMap(new TokenizerClass()).keyBy(value->value.f0.getLocationZone()).sum(1);
+        paymentFiltered.print();
+        DataStream<Tuple2<String, Integer>> counts = paymentFiltered
+                .map(new LocationZone())
+                .keyBy(0)
+                .sum(1);
+              //  .flatMap(new TokenizerClass()).keyBy(value->value.f0.getLocationZone()).sum(1);
         counts.print();
         env.execute();
     }
 }
+
+final class LocationZone implements MapFunction<PaymentData, Tuple2<String, Integer>>{
+
+    @Override
+    public Tuple2<String, Integer> map(PaymentData paymentData) throws Exception {
+        return new Tuple2<String, Integer>(paymentData.getLocationZone(), 1);
+    }
+}
+
 final class TokenizerClass
         implements FlatMapFunction<PaymentData, Tuple2<PaymentData, Integer>> {
 
