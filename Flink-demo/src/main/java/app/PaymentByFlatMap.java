@@ -16,24 +16,35 @@ import java.util.HashMap;
 public class PaymentByFlatMap {
     public static void main(String[] args) throws Exception {
 
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setParallelism(4);
-        DataStream<PaymentData> payments = env.addSource(new PaymentDataGenerator());
-        //payments.writeAsText("C:\\Users\\Priyanka\\Downloads\\Input.txt");
-        DataStream<PaymentData> paymentFiltered  = payments.filter(new FilterFunction<PaymentData>() {
-            @Override
-            public boolean filter(PaymentData value) throws Exception {
-                return value.getStatus().equals(Status.STARTED.name());
-            }
-        }).keyBy(PaymentData::getComponentId);
-        paymentFiltered.print();
-        DataStream<Tuple2<String, Integer>> counts = paymentFiltered
-                .map(new LocationZone())
-                .keyBy(0)
-                .sum(1);
-              //  .flatMap(new TokenizerClass()).keyBy(value->value.f0.getLocationZone()).sum(1);
-        counts.print();
-        env.execute();
+        if (args.length == 2){
+
+            StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+            env.setParallelism(4);
+            DataStream<PaymentData> payments = env.addSource(new PaymentDataGenerator());
+            //payments.writeAsText("C:\\Users\\Priyanka\\Downloads\\Input.txt");
+            DataStream<PaymentData> paymentFiltered  = payments.filter(new FilterFunction<PaymentData>() {
+                @Override
+                public boolean filter(PaymentData value) throws Exception {
+                    return value.getStatus().equals(Status.STARTED.name());
+                }
+            }).keyBy(PaymentData::getComponentId);
+           //paymentFiltered.print();
+            DataStream<Tuple2<String, Integer>> counts = paymentFiltered
+                    .map(new LocationZone())
+                    .keyBy(0)
+                    .sum(1);
+            //  .flatMap(new TokenizerClass()).keyBy(value->value.f0.getLocationZone()).sum(1);
+            //counts.print();
+
+            paymentFiltered.writeAsText(args[0]);
+            counts.writeAsText(args[1]);
+
+            env.execute();
+        }else{
+            // close app
+        }
+
+
     }
 }
 
