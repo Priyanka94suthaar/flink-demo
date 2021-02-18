@@ -16,6 +16,7 @@ import java.util.HashMap;
 public class PaymentByFlatMap {
     public static void main(String[] args) throws Exception {
 
+
         if (args.length == 2){
 
             StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -43,6 +44,7 @@ public class PaymentByFlatMap {
         }else{
             // close app
         }
+
 
 
     }

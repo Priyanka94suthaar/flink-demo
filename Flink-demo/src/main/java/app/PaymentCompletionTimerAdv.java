@@ -20,6 +20,7 @@ import org.apache.flink.util.Collector;
 public class PaymentCompletionTimerAdv {
     public static void main(String[] args) throws Exception {
 
+
         if (args.length == 2){
             StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
             env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
