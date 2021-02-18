@@ -19,33 +19,37 @@ import org.apache.flink.util.Collector;
 
 public class PaymentCompletionTimerAdv {
     public static void main(String[] args) throws Exception {
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
-        env.setParallelism(4);
-        DataStream<PaymentDataCase2> payments = env.addSource(new CompletionDataGenerator());
 
-        DataStream<Tuple2<String, Long>> completionInterval = payments
-                .keyBy(event -> event.getComponentId())
-                .process(new IntervalProcess());
-        DataStream<Tuple2<String, Long>> finalInterval =
-                completionInterval.filter(new FilterFunction<Tuple2<String, Long>>() {
-                    @Override
-                    public boolean filter(Tuple2<String, Long> value) throws Exception {
-                        if("No-Alerts".equals(value.f0)){
-                            return false;
-                        }else{
-                            System.out.println("\n!! Match Alert Received : Payment Id "
-                                    + value.f0 + " Time to Complete is "
-                                    + value.f1 + " ms" + "\n");
-                            return true;
+
+        if (args.length == 2){
+            StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+            env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+            env.setParallelism(4);
+            DataStream<PaymentDataCase2> payments = env.addSource(new CompletionDataGenerator());
+
+            DataStream<Tuple2<String, Long>> completionInterval = payments
+                    .keyBy(event -> event.getComponentId())
+                    .process(new IntervalProcess());
+            DataStream<Tuple2<String, Long>> finalInterval =
+                    completionInterval.filter(new FilterFunction<Tuple2<String, Long>>() {
+                        @Override
+                        public boolean filter(Tuple2<String, Long> value) throws Exception {
+                            if("No-Alerts".equals(value.f0)){
+                                return false;
+                            }else{
+                                System.out.println("\n!! Match Alert Received : Payment Id "
+                                        + value.f0 + " Time to Complete is "
+                                        + value.f1 + " ms" + "\n");
+                                return true;
+                            }
                         }
-                    }
-                });
+                    });
 
-        payments.print();
-        finalInterval.print();
+            payments.writeAsText(args[0]);
+            finalInterval.writeAsText(args[1]);
+            env.execute();
+        }
 
-        env.execute();
     }
 }
 

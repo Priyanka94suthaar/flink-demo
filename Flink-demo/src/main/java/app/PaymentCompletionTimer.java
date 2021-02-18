@@ -19,18 +19,25 @@ import org.apache.flink.util.Collector;
 
 public class PaymentCompletionTimer {
     public static void main(String[] args) throws Exception {
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setParallelism(4);
-        DataStream<PaymentDataCase2> payments = env.addSource(new CompletionDataGenerator());
-        DataStream<Tuple2<String, Long>> completionInterval = payments
-                .keyBy(event -> event.getComponentId())
-                .map(new CompletionIntervalMap())
-                .filter(new FilterNoAlerts());
 
-        payments.print();
-        completionInterval.print();
 
-        env.execute();
+        if (args.length == 2){
+            StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+            env.setParallelism(4);
+            DataStream<PaymentDataCase2> payments = env.addSource(new CompletionDataGenerator());
+            DataStream<Tuple2<String, Long>> completionInterval = payments
+                    .keyBy(event -> event.getComponentId())
+                    .map(new CompletionIntervalMap())
+                    .filter(new FilterNoAlerts());
+
+            payments.writeAsText(args[0]);
+            completionInterval.writeAsText(args[1]);
+
+            env.execute();
+        }
+
+
+
     }
 }
 
